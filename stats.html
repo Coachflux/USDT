@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>USDT Mining - Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        usdt: { green: '#26A17B', dark: '#1E8A65', light: '#4DBF9A', mint: '#6DD5B0' },
+                        app: { bg: '#0A0F0D', surface: '#111915', card: '#162820' },
+                        text: { primary: '#FFFFFF', secondary: '#8BA89E', tertiary: '#5A7268' },
+                        gold: { DEFAULT: '#D4AF37', light: '#F0D878' }
+                    },
+                    fontFamily: { sans: ['Plus Jakarta Sans'], mono: ['Space Mono'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0A0F0D; color: #FFFFFF; overflow: hidden; }
+        .glass-card { background: linear-gradient(145deg, rgba(22,40,32,0.9) 0%, rgba(15,26,21,0.95) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(38,161,123,0.12); }
+        .gradient-border { position: relative; background: #162820; border-radius: 20px; }
+        .gradient-border::before { content: ''; position: absolute; inset: -1px; border-radius: 21px; padding: 1px; background: linear-gradient(135deg, #26A17B, #4DBF9A, #26A17B, #1E8A65); background-size: 300% 300%; animation: gradient-rotate 4s ease infinite; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.6; }
+        @keyframes gradient-rotate { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .usdt-glow-soft { box-shadow: 0 0 30px rgba(38,161,123,0.15); }
+        .mining-pulse { animation: mining-breathe 3s ease-in-out infinite; }
+        @keyframes mining-breathe { 0%,100% { box-shadow: 0 0 20px rgba(38,161,123,0.2); transform: scale(1); } 50% { box-shadow: 0 0 40px rgba(38,161,123,0.4); transform: scale(1.02); } }
+        .screen-enter { animation: screen-enter 0.4s cubic-bezier(0.4,0,0.2,1); }
+        @keyframes screen-enter { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .level-progress-ring { position: relative; width: 80px; height: 80px; }
+        .level-progress-ring svg { transform: rotate(-90deg); }
+        .level-progress-ring circle { fill: none; stroke-width: 6; }
+        .level-progress-ring .bg { stroke: rgba(38,161,123,0.1); }
+        .level-progress-ring .progress { stroke: url(#gradient); stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+    </style>
+</head>
+<body class="bg-app-bg min-h-screen flex justify-center items-start">
+    <div class="w-full max-w-[420px] min-h-screen bg-app-bg relative overflow-hidden">
+        <svg width="0" height="0" style="position:absolute;">
+            <defs><linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#1E8A65"/><stop offset="100%" style="stop-color:#26A17B"/></linearGradient></defs>
+        </svg>
+
+        <div id="main-content" class="flex flex-col h-screen screen-enter">
+            <div class="px-6 pt-14 pb-4 flex items-center gap-4">
+                <button onclick="window.location.href='home.html'" class="w-10 h-10 rounded-xl bg-app-card border border-usdt-green/10 flex items-center justify-center hover:border-usdt-green/30 transition-all">
+                    <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <h1 class="text-xl font-bold text-white">Statistics</h1>
+            </div>
+
+            <div class="flex-1 overflow-y-auto no-scrollbar px-6 pb-28">
+                <!-- Overview Cards -->
+                <div class="grid grid-cols-2 gap-3 mb-5">
+                    <div class="stat-card glass-card rounded-2xl p-4">
+                        <div class="w-8 h-8 rounded-lg bg-usdt-green/10 flex items-center justify-center mb-2">
+                            <svg class="w-4 h-4 text-usdt-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <p class="text-text-tertiary text-xs">Total Mined</p>
+                        <p class="text-xl font-bold text-white font-mono" id="stat-total-mined">0.00</p>
+                        <p class="text-text-tertiary text-[10px]">USDT</p>
+                    </div>
+                    <div class="stat-card glass-card rounded-2xl p-4">
+                        <div class="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center mb-2">
+                            <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        </div>
+                        <p class="text-text-tertiary text-xs">Wallet Balance</p>
+                        <p class="text-xl font-bold text-gold font-mono" id="stat-balance">0.00</p>
+                        <p class="text-text-tertiary text-[10px]">USDT</p>
+                    </div>
+                    <div class="stat-card glass-card rounded-2xl p-4">
+                        <div class="w-8 h-8 rounded-lg bg-usdt-green/10 flex items-center justify-center mb-2">
+                            <svg class="w-4 h-4 text-usdt-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                        </div>
+                        <p class="text-text-tertiary text-xs">Referral Earnings</p>
+                        <p class="text-xl font-bold text-usdt-green font-mono" id="stat-ref-earnings">0.00</p>
+                        <p class="text-text-tertiary text-[10px]">USDT</p>
+                    </div>
+                    <div class="stat-card glass-card rounded-2xl p-4">
+                        <div class="w-8 h-8 rounded-lg bg-usdt-green/10 flex items-center justify-center mb-2">
+                            <svg class="w-4 h-4 text-usdt-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <p class="text-text-tertiary text-xs">Mining Days</p>
+                        <p class="text-xl font-bold text-white font-mono" id="stat-mining-days">0</p>
+                        <p class="text-text-tertiary text-[10px]">days</p>
+                    </div>
+                </div>
+
+                <!-- Level Progress -->
+                <div class="gradient-border p-[1px] rounded-[20px] mb-5">
+                    <div class="bg-app-card rounded-[19px] p-5">
+                        <h3 class="text-white font-semibold mb-4">Level Progression</h3>
+                        <div class="space-y-4" id="levels-container">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Referral Stats -->
+                <div class="glass-card rounded-2xl p-5 mb-5">
+                    <h3 class="text-white font-semibold mb-4">Referral Statistics</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-text-secondary text-sm">Total Referrals</span>
+                            <span class="text-white font-mono font-bold" id="stat-total-refs">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-text-secondary text-sm">Active Referrals</span>
+                            <span class="text-usdt-green font-mono font-bold" id="stat-active-refs">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-text-secondary text-sm">Inactive Referrals</span>
+                            <span class="text-red-400 font-mono font-bold" id="stat-inactive-refs">0</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t border-usdt-green/10">
+                            <span class="text-text-secondary text-sm">Daily from Referrals</span>
+                            <span class="text-gold font-mono font-bold" id="stat-daily-ref">+0.00 USDT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mining Performance -->
+                <div class="glass-card rounded-2xl p-5 mb-5">
+                    <h3 class="text-white font-semibold mb-4">Mining Performance</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-text-secondary text-sm">Highest Rate Achieved</span>
+                            <span class="text-white font-mono font-bold" id="stat-highest-rate">0.72 USDT/hr</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-text-secondary text-sm">Lowest Rate</span>
+                            <span class="text-red-400 font-mono font-bold" id="stat-lowest-rate">0.40 USDT/hr</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-text-secondary text-sm">Average Daily Earnings</span>
+                            <span class="text-usdt-green font-mono font-bold" id="stat-avg-daily">0.00 USDT</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-text-secondary text-sm">Total Sessions</span>
+                            <span class="text-white font-mono font-bold" id="stat-sessions">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="absolute bottom-0 left-0 right-0 bg-app-bg/80 backdrop-blur-xl border-t border-usdt-green/5 px-6 py-3 z-20">
+                <div class="flex justify-around items-center">
+                    <button onclick="window.location.href='home.html'" class="flex flex-col items-center gap-1 py-1 px-3 rounded-lg hover:bg-usdt-green/5 transition-all">
+                        <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        <span class="text-text-tertiary text-[10px]">Home</span>
+                    </button>
+                    <button class="flex flex-col items-center gap-1 py-1 px-3 rounded-lg bg-usdt-green/5">
+                        <svg class="w-5 h-5 text-usdt-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        <span class="text-usdt-green text-[10px] font-medium">Stats</span>
+                    </button>
+                    <button onclick="window.location.href='mining.html'" class="w-14 h-14 -mt-6 rounded-2xl bg-gradient-to-br from-usdt-green to-usdt-dark flex items-center justify-center mining-pulse border-2 border-app-bg shadow-xl shadow-usdt-green/30">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </button>
+                    <button onclick="window.location.href='wallet.html'" class="flex flex-col items-center gap-1 py-1 px-3 rounded-lg hover:bg-usdt-green/5 transition-all">
+                        <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        <span class="text-text-tertiary text-[10px]">Wallet</span>
+                    </button>
+                    <button onclick="window.location.href='profile.html'" class="flex flex-col items-center gap-1 py-1 px-3 rounded-lg hover:bg-usdt-green/5 transition-all">
+                        <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <span class="text-text-tertiary text-[10px]">Profile</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let userData = null;
+
+        const LEVELS = ['newbie', 'pioneer', 'elite', 'supreme'];
+        const LEVEL_NAMES = { newbie: 'Newbie', pioneer: 'Pioneer', elite: 'Elite', supreme: 'Supreme' };
+        const LEVEL_DAYS = 30;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = 'index.html'; return; }
+            currentUser = user;
+            await loadUserData();
+            updateUI();
+        });
+
+        async function loadUserData() {
+            const doc = await db.collection('users').doc(currentUser.uid).get();
+            if (!doc.exists) { window.location.href = 'index.html'; return; }
+            userData = doc.data();
+        }
+
+        function updateUI() {
+            if (!userData) return;
+
+            document.getElementById('stat-total-mined').textContent = (userData.totalEarned || 0).toFixed(2);
+            document.getElementById('stat-balance').textContent = (userData.walletBalance || 0).toFixed(2);
+            document.getElementById('stat-ref-earnings').textContent = (userData.referralEarnings || 0).toFixed(2);
+            document.getElementById('stat-mining-days').textContent = userData.totalMiningDays || 0;
+            document.getElementById('stat-total-refs').textContent = (userData.referrals || []).length;
+            document.getElementById('stat-sessions').textContent = (userData.miningHistory || []).length;
+
+            // Calculate active/inactive
+            // (In production, fetch actual referral data)
+            const totalRefs = (userData.referrals || []).length;
+            document.getElementById('stat-active-refs').textContent = Math.floor(totalRefs * 0.6);
+            document.getElementById('stat-inactive-refs').textContent = Math.ceil(totalRefs * 0.4);
+            document.getElementById('stat-daily-ref').textContent = '+' + ((userData.activeReferralCount || 0) * 0.03).toFixed(2) + ' USDT';
+
+            // Average daily
+            const totalEarned = userData.totalEarned || 0;
+            const days = userData.totalMiningDays || 1;
+            document.getElementById('stat-avg-daily').textContent = (totalEarned / days).toFixed(4) + ' USDT';
+
+            // Render level progression
+            renderLevels();
+        }
+
+        function renderLevels() {
+            const container = document.getElementById('levels-container');
+            const currentLevelIdx = LEVELS.indexOf(userData.level || 'newbie');
+            const daysAtLevel = userData.daysAtCurrentLevel || 0;
+            const circumference = 2 * Math.PI * 34;
+
+            container.innerHTML = LEVELS.map((level, idx) => {
+                const isCurrent = idx === currentLevelIdx;
+                const isCompleted = idx < currentLevelIdx;
+                const isFuture = idx > currentLevelIdx;
+                const progress = isCurrent ? (daysAtLevel / LEVEL_DAYS) : (isCompleted ? 1 : 0);
+                const offset = circumference - (progress * circumference);
+
+                return `
+                    <div class="flex items-center gap-4 ${isFuture ? 'opacity-40' : ''}">
+                        <div class="level-progress-ring flex-shrink-0">
+                            <svg width="80" height="80" viewBox="0 0 80 80">
+                                <circle class="bg" cx="40" cy="40" r="34"/>
+                                <circle class="progress" cx="40" cy="40" r="34" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-white text-xs font-bold">${isCompleted ? '✓' : (isCurrent ? daysAtLevel + '/30' : '0/30')}</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-white font-semibold ${isCurrent ? 'text-usdt-green' : ''}">${LEVEL_NAMES[level]}</h4>
+                                ${isCurrent ? '<span class="px-2 py-0.5 rounded-full bg-usdt-green/10 border border-usdt-green/20 text-usdt-green text-[10px] font-bold">CURRENT</span>' : ''}
+                                ${isCompleted ? '<span class="px-2 py-0.5 rounded-full bg-usdt-green/10 text-usdt-green text-[10px] font-bold">COMPLETED</span>' : ''}
+                            </div>
+                            <p class="text-text-tertiary text-xs mt-0.5">
+                                ${isCompleted ? 'Completed in ' + (userData.levelHistory?.find(h => h.level === level)?.daysToPromote || 30) + ' days' :
+                                  isCurrent ? 'Mine for 30 active days to promote' :
+                                  'Unlock after completing ' + LEVEL_NAMES[LEVELS[idx-1]]}
+                            </p>
+                            ${isCurrent ? `
+                            <div class="mt-2">
+                                <div class="w-full h-1.5 bg-app-surface rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full bg-gradient-to-r from-usdt-green to-usdt-light transition-all" style="width: ${(daysAtLevel/LEVEL_DAYS)*100}%"></div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
