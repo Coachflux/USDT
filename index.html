@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>USDT Mining - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        usdt: { green: '#26A17B', dark: '#1E8A65', light: '#4DBF9A', mint: '#6DD5B0' },
+                        app: { bg: '#0A0F0D', surface: '#111915', card: '#162820' },
+                        text: { primary: '#FFFFFF', secondary: '#8BA89E', tertiary: '#5A7268' },
+                        gold: { DEFAULT: '#D4AF37', light: '#F0D878' }
+                    },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui'], mono: ['Space Mono', 'monospace'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0A0F0D; color: #FFFFFF; overflow: hidden; }
+        .glass-card { background: linear-gradient(145deg, rgba(22,40,32,0.9) 0%, rgba(15,26,21,0.95) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(38,161,123,0.12); }
+        .gradient-border { position: relative; background: #162820; border-radius: 20px; }
+        .gradient-border::before { content: ''; position: absolute; inset: -1px; border-radius: 21px; padding: 1px; background: linear-gradient(135deg, #26A17B, #4DBF9A, #26A17B, #1E8A65); background-size: 300% 300%; animation: gradient-rotate 4s ease infinite; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.6; }
+        @keyframes gradient-rotate { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .usdt-glow-soft { box-shadow: 0 0 30px rgba(38,161,123,0.15); }
+        .usdt-glow-medium { box-shadow: 0 0 40px rgba(38,161,123,0.2); }
+        .mining-pulse { animation: mining-breathe 3s ease-in-out infinite; }
+        @keyframes mining-breathe { 0%,100% { box-shadow: 0 0 20px rgba(38,161,123,0.2); transform: scale(1); } 50% { box-shadow: 0 0 40px rgba(38,161,123,0.4); transform: scale(1.02); } }
+        .screen-enter { animation: screen-enter 0.5s cubic-bezier(0.4,0,0.2,1); }
+        @keyframes screen-enter { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .input-field { background: rgba(22,40,32,0.8); border: 1px solid rgba(38,161,123,0.15); transition: all 0.3s ease; }
+        .input-field:focus { border-color: #26A17B; box-shadow: 0 0 0 3px rgba(38,161,123,0.1); outline: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .sparkle { position: absolute; width: 3px; height: 3px; background: #26A17B; border-radius: 50%; animation: sparkle-float 4s ease-in-out infinite; box-shadow: 0 0 6px #26A17B; }
+        @keyframes sparkle-float { 0%,100% { transform: translateY(0) scale(0.3); opacity: 0; } 20% { opacity: 1; transform: translateY(-20px) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-80px) scale(0.3); } }
+    </style>
+</head>
+<body class="bg-app-bg min-h-screen flex justify-center items-start">
+    <div class="w-full max-w-[420px] min-h-screen bg-app-bg relative overflow-hidden">
+        <div class="sparkle-container absolute inset-0 overflow-hidden pointer-events-none z-0" id="sparkles"></div>
+
+        <!-- AUTH SCREEN -->
+        <div id="auth-screen" class="flex flex-col h-screen screen-enter relative z-10">
+            <!-- Hero Section -->
+            <div class="flex-1 flex flex-col items-center justify-center px-6 pt-10">
+                <div class="relative w-28 h-28 mb-6">
+                    <div class="absolute inset-0 rounded-full border border-usdt-green/20 animate-spin" style="animation-duration: 12s;"></div>
+                    <div class="absolute inset-2 rounded-full border border-usdt-green/30 animate-spin" style="animation-duration: 8s; animation-direction: reverse;"></div>
+                    <div class="absolute inset-4 rounded-full bg-gradient-to-br from-usdt-green/20 to-transparent flex items-center justify-center mining-pulse">
+                        <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+                            <circle cx="16" cy="16" r="13" stroke="#26A17B" stroke-width="1.5"/>
+                            <ellipse cx="16" cy="16" rx="16" ry="5" stroke="#26A17B" stroke-width="1" transform="rotate(-12 16 16)" opacity="0.6"/>
+                            <text x="16" y="21" text-anchor="middle" fill="#FFFFFF" font-size="14" font-weight="700">₮</text>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-3xl font-bold text-white tracking-tight mb-2">USDT Mining</h1>
+                <p class="text-text-secondary text-sm mb-8">Mine USDT. Earn Daily. Withdraw Anytime.</p>
+
+                <!-- Tabs -->
+                <div class="flex w-full bg-app-surface rounded-xl p-1 mb-6">
+                    <button id="tab-login" onclick="switchTab('login')" class="flex-1 py-2.5 rounded-lg bg-usdt-green text-white text-sm font-medium transition-all">Login</button>
+                    <button id="tab-signup" onclick="switchTab('signup')" class="flex-1 py-2.5 rounded-lg text-text-secondary text-sm font-medium hover:text-white transition-all">Sign Up</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="w-full space-y-4" onsubmit="handleLogin(event)">
+                    <div>
+                        <label class="text-text-secondary text-xs uppercase tracking-wider mb-1.5 block">Email</label>
+                        <input type="email" id="login-email" class="input-field w-full px-4 py-3.5 rounded-xl text-white text-sm placeholder-text-tertiary" placeholder="your@email.com" required>
+                    </div>
+                    <div>
+                        <label class="text-text-secondary text-xs uppercase tracking-wider mb-1.5 block">Password</label>
+                        <input type="password" id="login-password" class="input-field w-full px-4 py-3.5 rounded-xl text-white text-sm placeholder-text-tertiary" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" id="login-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-usdt-green to-usdt-dark text-white font-semibold usdt-glow-medium hover:shadow-lg hover:shadow-usdt-green/30 transition-all flex items-center justify-center gap-2">
+                        <span>Sign In</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </button>
+                </form>
+
+                <!-- Signup Form -->
+                <form id="signup-form" class="w-full space-y-4 hidden" onsubmit="handleSignup(event)">
+                    <div>
+                        <label class="text-text-secondary text-xs uppercase tracking-wider mb-1.5 block">Full Name</label>
+                        <input type="text" id="signup-name" class="input-field w-full px-4 py-3.5 rounded-xl text-white text-sm placeholder-text-tertiary" placeholder="John Doe" required>
+                    </div>
+                    <div>
+                        <label class="text-text-secondary text-xs uppercase tracking-wider mb-1.5 block">Email</label>
+                        <input type="email" id="signup-email" class="input-field w-full px-4 py-3.5 rounded-xl text-white text-sm placeholder-text-tertiary" placeholder="your@email.com" required>
+                    </div>
+                    <div>
+                        <label class="text-text-secondary text-xs uppercase tracking-wider mb-1.5 block">Password</label>
+                        <input type="password" id="signup-password" class="input-field w-full px-4 py-3.5 rounded-xl text-white text-sm placeholder-text-tertiary" placeholder="Min 6 characters" minlength="6" required>
+                    </div>
+                    <div>
+                        <label class="text-text-secondary text-xs uppercase tracking-wider mb-1.5 block">Referral Code (Optional)</label>
+                        <input type="text" id="signup-referral" class="input-field w-full px-4 py-3.5 rounded-xl text-white text-sm placeholder-text-tertiary uppercase" placeholder="REF123" maxlength="10">
+                    </div>
+                    <button type="submit" id="signup-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-usdt-green to-usdt-dark text-white font-semibold usdt-glow-medium hover:shadow-lg hover:shadow-usdt-green/30 transition-all flex items-center justify-center gap-2">
+                        <span>Create Account</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="flex items-center gap-3 w-full my-6">
+                    <div class="flex-1 h-px bg-usdt-green/10"></div>
+                    <span class="text-text-tertiary text-xs">or continue with</span>
+                    <div class="flex-1 h-px bg-usdt-green/10"></div>
+                </div>
+
+                <!-- Google Sign In -->
+                <button onclick="signInWithGoogle()" class="w-full py-3.5 rounded-xl glass-card flex items-center justify-center gap-3 hover:border-usdt-green/25 transition-all">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    <span class="text-white text-sm font-medium">Sign in with Google</span>
+                </button>
+
+                <p class="text-text-tertiary text-xs text-center mt-6 max-w-[280px]">By continuing, you agree to our Terms of Service and Privacy Policy.</p>
+            </div>
+        </div>
+
+        <!-- PIN SETUP SCREEN -->
+        <div id="pin-screen" class="hidden flex-col h-screen screen-enter relative z-10">
+            <div class="flex-1 flex flex-col items-center justify-center px-6">
+                <div class="w-16 h-16 rounded-2xl bg-usdt-green/10 border border-usdt-green/20 flex items-center justify-center mb-6">
+                    <svg class="w-8 h-8 text-usdt-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Secure Your Wallet</h2>
+                <p class="text-text-secondary text-sm text-center mb-2 max-w-[300px]">Create a 6-digit PIN to protect your wallet. <span class="text-gold font-semibold">Write it down somewhere safe.</span></p>
+                <p class="text-red-400 text-xs text-center mb-8 max-w-[300px]">⚠️ We cannot recover your PIN if you forget it. This is a decentralized wallet.</p>
+
+                <div class="flex gap-3 mb-8" id="pin-dots">
+                    <div class="w-4 h-4 rounded-full border-2 border-usdt-green/30 transition-all" data-index="0"></div>
+                    <div class="w-4 h-4 rounded-full border-2 border-usdt-green/30 transition-all" data-index="1"></div>
+                    <div class="w-4 h-4 rounded-full border-2 border-usdt-green/30 transition-all" data-index="2"></div>
+                    <div class="w-4 h-4 rounded-full border-2 border-usdt-green/30 transition-all" data-index="3"></div>
+                    <div class="w-4 h-4 rounded-full border-2 border-usdt-green/30 transition-all" data-index="4"></div>
+                    <div class="w-4 h-4 rounded-full border-2 border-usdt-green/30 transition-all" data-index="5"></div>
+                </div>
+
+                <p id="pin-error" class="text-red-400 text-sm mb-4 hidden">PINs do not match. Please try again.</p>
+                <p id="pin-step" class="text-text-secondary text-xs mb-6">Step 1: Create your PIN</p>
+
+                <!-- Numpad -->
+                <div class="grid grid-cols-3 gap-3 w-full max-w-[280px]">
+                    <button onclick="enterPin(1)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">1</button>
+                    <button onclick="enterPin(2)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">2</button>
+                    <button onclick="enterPin(3)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">3</button>
+                    <button onclick="enterPin(4)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">4</button>
+                    <button onclick="enterPin(5)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">5</button>
+                    <button onclick="enterPin(6)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">6</button>
+                    <button onclick="enterPin(7)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">7</button>
+                    <button onclick="enterPin(8)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">8</button>
+                    <button onclick="enterPin(9)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">9</button>
+                    <button class="h-16 rounded-2xl"></button>
+                    <button onclick="enterPin(0)" class="h-16 rounded-2xl glass-card text-white text-xl font-semibold hover:bg-usdt-green/10 transition-all active:scale-95">0</button>
+                    <button onclick="deletePin()" class="h-16 rounded-2xl glass-card flex items-center justify-center hover:bg-red-500/10 transition-all active:scale-95">
+                        <svg class="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BIOMETRIC PROMPT -->
+        <div id="biometric-screen" class="hidden flex-col h-screen screen-enter relative z-10">
+            <div class="flex-1 flex flex-col items-center justify-center px-6">
+                <div class="w-20 h-20 rounded-3xl bg-usdt-green/10 border border-usdt-green/20 flex items-center justify-center mb-6 mining-pulse">
+                    <svg class="w-10 h-10 text-usdt-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.131A8 8 0 008 3.239c-4.827 1.289-8.354 5.8-8.354 11.083 0 2.472.345 4.865.99 7.131M9.5 11a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-3">Enable Biometric Login</h2>
+                <p class="text-text-secondary text-sm text-center mb-8 max-w-[300px]">Use your fingerprint or face recognition for faster, more secure access to your wallet.</p>
+                <button onclick="enableBiometric()" class="w-full py-4 rounded-xl bg-gradient-to-r from-usdt-green to-usdt-dark text-white font-semibold usdt-glow-medium mb-3">Enable Biometric</button>
+                <button onclick="skipBiometric()" class="w-full py-3 rounded-xl text-text-secondary text-sm hover:text-white transition-all">Skip for Now</button>
+            </div>
+        </div>
+
+        <!-- LOADING OVERLAY -->
+        <div id="loading-overlay" class="hidden absolute inset-0 bg-app-bg/90 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div class="flex flex-col items-center">
+                <div class="w-12 h-12 rounded-full border-2 border-usdt-green/20 border-t-usdt-green animate-spin mb-4"></div>
+                <p class="text-text-secondary text-sm" id="loading-text">Please wait...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── FIREBASE CONFIG ───
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ─── SPARKLES ───
+        function createSparkles() {
+            const container = document.getElementById('sparkles');
+            for (let i = 0; i < 15; i++) {
+                const s = document.createElement('div');
+                s.className = 'sparkle';
+                s.style.left = Math.random() * 100 + '%';
+                s.style.top = Math.random() * 100 + '%';
+                s.style.animationDelay = Math.random() * 4 + 's';
+                s.style.animationDuration = (3 + Math.random() * 3) + 's';
+                container.appendChild(s);
+            }
+        }
+        createSparkles();
+
+        // ─── TAB SWITCHING ───
+        function switchTab(tab) {
+            document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup');
+            document.getElementById('tab-login').className = tab === 'login' ? 'flex-1 py-2.5 rounded-lg bg-usdt-green text-white text-sm font-medium transition-all' : 'flex-1 py-2.5 rounded-lg text-text-secondary text-sm font-medium hover:text-white transition-all';
+            document.getElementById('tab-signup').className = tab === 'signup' ? 'flex-1 py-2.5 rounded-lg bg-usdt-green text-white text-sm font-medium transition-all' : 'flex-1 py-2.5 rounded-lg text-text-secondary text-sm font-medium hover:text-white transition-all';
+        }
+
+        // ─── AUTH STATE ───
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (!data.pinSet) {
+                        showScreen('pin-screen');
+                    } else if (!data.biometricPrompted) {
+                        showScreen('biometric-screen');
+                    } else {
+                        window.location.href = 'home.html';
+                    }
+                } else {
+                    showScreen('pin-screen');
+                }
+            }
+        });
+
+        function showScreen(id) {
+            ['auth-screen', 'pin-screen', 'biometric-screen'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+                document.getElementById(s).classList.remove('flex');
+            });
+            const el = document.getElementById(id);
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        }
+
+        function showLoading(text) {
+            document.getElementById('loading-text').textContent = text;
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // ─── LOGIN ───
+        async function handleLogin(e) {
+            e.preventDefault();
+            showLoading('Signing in...');
+            try {
+                await auth.signInWithEmailAndPassword(
+                    document.getElementById('login-email').value,
+                    document.getElementById('login-password').value
+                );
+            } catch (err) {
+                hideLoading();
+                alert(err.message);
+            }
+        }
+
+        // ─── SIGNUP ───
+        async function handleSignup(e) {
+            e.preventDefault();
+            showLoading('Creating account...');
+            try {
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                const name = document.getElementById('signup-name').value;
+                const referralCode = document.getElementById('signup-referral').value.toUpperCase().trim();
+
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                const uid = cred.user.uid;
+                const myRefCode = 'REF' + uid.substring(0, 6).toUpperCase();
+
+                let referredBy = null;
+                if (referralCode) {
+                    const snap = await db.collection('users').where('referralCode', '==', referralCode).limit(1).get();
+                    if (!snap.empty) referredBy = snap.docs[0].id;
+                }
+
+                // Check device
+                const deviceId = navigator.userAgent + screen.width + screen.height;
+                const deviceHash = btoa(deviceId).substring(0, 32);
+
+                await db.collection('users').doc(uid).set({
+                    uid: uid,
+                    name: name,
+                    email: email,
+                    referralCode: myRefCode,
+                    referredBy: referredBy,
+                    referrals: [],
+                    referralCount: 0,
+                    referralEarnings: 0,
+                    totalEarned: 0,
+                    walletBalance: 0,
+                    miningRate: 0.72,
+                    currentMiningRate: 0.72,
+                    miningStartedAt: null,
+                    miningEndsAt: null,
+                    lastMiningDate: null,
+                    totalMiningDays: 0,
+                    consecutiveDays: 0,
+                    level: 'newbie',
+                    levelStartedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    daysAtCurrentLevel: 0,
+                    miningHistory: [],
+                    transactions: [],
+                    pinSet: false,
+                    biometricPrompted: false,
+                    biometricEnabled: false,
+                    deviceHash: deviceHash,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastActive: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                if (referredBy) {
+                    await db.collection('users').doc(referredBy).update({
+                        referrals: firebase.firestore.FieldValue.arrayUnion(uid),
+                        referralCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                }
+
+                hideLoading();
+            } catch (err) {
+                hideLoading();
+                alert(err.message);
+            }
+        }
+
+        // ─── GOOGLE SIGN IN ───
+        async function signInWithGoogle() {
+            showLoading('Connecting to Google...');
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                await auth.signInWithPopup(provider);
+            } catch (err) {
+                hideLoading();
+                alert(err.message);
+            }
+        }
+
+        // ─── PIN SETUP ───
+        let pinStep = 1;
+        let pin1 = '';
+        let pin2 = '';
+        let currentPin = '';
+
+        function enterPin(digit) {
+            if (currentPin.length < 6) {
+                currentPin += digit;
+                updatePinDots();
+                if (currentPin.length === 6) {
+                    setTimeout(() => processPin(), 200);
+                }
+            }
+        }
+
+        function deletePin() {
+            if (currentPin.length > 0) {
+                currentPin = currentPin.slice(0, -1);
+                updatePinDots();
+            }
+        }
+
+        function updatePinDots() {
+            document.querySelectorAll('#pin-dots > div').forEach((dot, i) => {
+                if (i < currentPin.length) {
+                    dot.className = 'w-4 h-4 rounded-full bg-usdt-green usdt-glow-soft transition-all';
+                } else {
+                    dot.className = 'w-4 h-4 rounded-full border-2 border-usdt-green/30 transition-all';
+                }
+            });
+        }
+
+        async function processPin() {
+            if (pinStep === 1) {
+                pin1 = currentPin;
+                currentPin = '';
+                pinStep = 2;
+                updatePinDots();
+                document.getElementById('pin-step').textContent = 'Step 2: Confirm your PIN';
+                document.getElementById('pin-error').classList.add('hidden');
+            } else {
+                pin2 = currentPin;
+                if (pin1 === pin2) {
+                    showLoading('Securing wallet...');
+                    const user = auth.currentUser;
+                    await db.collection('users').doc(user.uid).update({
+                        pinHash: btoa(pin1),
+                        pinSet: true
+                    });
+                    localStorage.setItem('wallet_pin_' + user.uid, btoa(pin1));
+                    hideLoading();
+                    showScreen('biometric-screen');
+                } else {
+                    currentPin = '';
+                    pinStep = 1;
+                    pin1 = '';
+                    updatePinDots();
+                    document.getElementById('pin-step').textContent = 'Step 1: Create your PIN';
+                    document.getElementById('pin-error').classList.remove('hidden');
+                }
+            }
+        }
+
+        // ─── BIOMETRIC ───
+        async function enableBiometric() {
+            showLoading('Setting up biometric...');
+            const user = auth.currentUser;
+            await db.collection('users').doc(user.uid).update({
+                biometricEnabled: true,
+                biometricPrompted: true
+            });
+            hideLoading();
+            window.location.href = 'home.html';
+        }
+
+        async function skipBiometric() {
+            const user = auth.currentUser;
+            await db.collection('users').doc(user.uid).update({ biometricPrompted: true });
+            window.location.href = 'home.html';
+        }
+    </script>
+</body>
+</html>
